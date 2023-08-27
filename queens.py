@@ -46,7 +46,7 @@ def queensFitness( individual ):
             # other queen on the same descendent diagnoal, decrease fitness by 1
             fitness -= 1 if individual[i]==(individual[i+j]-j) else 0
             print(f'i={i}, j={j}, stopfitness={fitness}\n') if __printdebug__ else None
-    print(f'individual = {individual}, fitness = {fitness}')
+    print(f'individual = {individual}, fitness = {fitness}') if __printdebug__ else None
     return fitness
 
     
@@ -64,14 +64,14 @@ def queensBruteForce( individualSize ):
 def main():
     solutions={}
     # solve from n=4 to n=10 by brute force
-    for n in range(4,5):
+    for n in range(4,11):
         print(f'{datetime.now().replace(microsecond=0)}')
         solutions[f'{n}_Queens'] = queensBruteForce(n)
         print(f'\n\n{n} Queens Solutions ({len(solutions[f"{n}_Queens"])} best solutions):')
         print(f'solutions[f\'{n}_Queens\'] = {solutions[f"{n}_Queens"]}')
     
     # write solution to a file
-    with open('QueensSolutions.csv','w') as f:
+    with open('Solutions.csv','w') as f:
         json.dump(solutions,f,indent=4)
 
 if __name__ == '__main__':

@@ -10,7 +10,7 @@ __version__     = '1.00'
 __maintainer__  = ''
 __email__       = ''
 __status__      = 'Production'
-__printdebug__  = False
+__printdebug__  = True
 
 from datetime import datetime
 import random

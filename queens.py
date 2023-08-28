@@ -10,7 +10,7 @@ __version__     = '1.00'
 __maintainer__  = ''
 __email__       = ''
 __status__      = 'Production'
-__printdebug__  = True
+__printdebug__  = False
 
 from datetime import datetime
 import random
@@ -63,8 +63,8 @@ def queensBruteForce( individualSize ):
 
 def main():
     solutions={}
-    # solve from n=4 to n=10 by brute force
-    for n in range(4,11):
+    # solve from n=1 to n=12 by brute force
+    for n in range(1,13):
         print(f'{datetime.now().replace(microsecond=0)}')
         solutions[f'{n}_Queens'] = queensBruteForce(n)
         print(f'\n\n{n} Queens Solutions ({len(solutions[f"{n}_Queens"])} best solutions):')

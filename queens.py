@@ -52,7 +52,7 @@ def queensFitness( individual ):
     return fitness
 
 def queensPlotSolution( title, fitness ):
-    dpi = 600
+    dpi = 120
     plt.ioff()
     plt.rcParams['toolbar'] = 'None'
     plt.figure(figsize=(6.4, 6.4), dpi=dpi)
@@ -65,22 +65,64 @@ def queensPlotSolution( title, fitness ):
 def queensBruteForce( individualSize ):
     solution = []
     firstindividual = []
+    print(f'Starting queensBruteForce({individualSize})')
     maxFitness = queensMaxFitness( individualSize )
     for i in range(1, individualSize+1):
         firstindividual += [i]
     i=0
+    print(f'initializing fitness..')
     fitness = np.zeros(math.factorial(individualSize),dtype='i2')
+    print(f'starting permutations..')
     for individual in itertools.permutations(firstindividual,r=individualSize):
         fitness[i] = queensFitness(individual)
         if( fitness[i] == maxFitness ):
             solution += [individual]
         i += 1
+    print(f'ploting solution..')
     queensPlotSolution( f'{individualSize} Queens Problem', fitness )
+    print(f'Stopping queensBruteForce({individualSize})')
     return solution
+
+def queensPopulationFitness( population ):
+    ###
+    return maxfitness, maxfitness, totalfitness
+
+def queensReproduction( individual ):
+    ###
+    return individual
+
+def queensMutation( individual ):
+    ###
+    return individual
+
+def queensCrossover( individual1, individual2 ):
+    ###
+    return individual
+
+def queensGenetic( individualSize, populationSize, weight_parameters, stop_generations, stop_maxfitness, stop_totalfitness ):
+    # weight_parameters = [ mutation_weight, reproduction_weight, crossover_weight ]
+    population = createPopulation( populationSize, individualSize)
+    generationPopulation = []
+    generation = 0
+    while( generation < stop_generations ):
+        maxfitness, maxfitness, totalfitness = queensPopulationFitness( population )
+        if( maxfitness >= stop_maxfitness):
+            break;
+        if( totalfitness >= stop_totalfitness):
+            break;
+        while (len(generation)<populationSize):
+            # select operation
+            # select individuals
+            # perform operation
+            # increment generation
+        population = generationPopulation[:populationSize]
+    return population
 
 def main():
     solutions={}
     # solve from n=1 to n=12 by brute force
+    with open('solutions-nqueens.json','w') as f:
+        f.write('\n')
     for n in range(1,13):
         startTime=datetime.now()
         solutions[f'{n}_Queens'] = queensBruteForce(n)
@@ -88,10 +130,10 @@ def main():
         print( f'\n\nStart: {startTime.replace(microsecond=0)}, Finish:{finishTime.replace(microsecond=0)}, Running Time: {finishTime-startTime}, '
               + f'{n} Queens Solutions ({len(solutions[f"{n}_Queens"])} best solutions)')
         print(f'solutions[f\'{n}_Queens\'] = {solutions[f"{n}_Queens"]}')
-    
-    # write solution to a file
-    with open('solutions-nqueens.json','w') as f:
-        json.dump(solutions,f,indent=1)
+        # write solution to a file
+        with open('solutions-nqueens.json','a') as f:
+            json.dump({f'{n}_Queens':solutions[f'{n}_Queens']},f)
+            f.write('\n')
 
 if __name__ == '__main__':
     # track execution time
@@ -102,4 +144,3 @@ if __name__ == '__main__':
     finishTime=datetime.now()
     print( f'\n\nStart: {startTime.replace(microsecond=0)}, Finish:{finishTime.replace(microsecond=0)}, Running Time: {finishTime-startTime}')
 
-    

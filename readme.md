@@ -19,3 +19,9 @@ A solução deste problema será feita por meio de algoritmos genéticos. Com o 
   10 Queens Solutions   (724 best solutions)<br>
   11 Queens Solutions  (2680 best solutions)<br>
   12 Queens Solutions (14200 best solutions)<br>
+<br><br>
+
+ python3 queens.py >queens.log &
+ disown
+ tail -f queens.log 
+ 

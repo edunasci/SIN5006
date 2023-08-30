@@ -17,6 +17,8 @@ import random
 import json
 import itertools
 import math
+import numpy as np
+import matplotlib.pyplot as plt
 
 def createIndividual( individualSize ):
     individual=[]
@@ -32,7 +34,7 @@ def createPopulation( populationSize, individualSize ):
     return population
 
 def queensMaxFitness( individualSize ):
-    return((1+individualSize)*individualSize/2)
+    return((1+individualSize)*individualSize/2*10+1)
 
 def queensFitness( individual ):
     fitness = queensMaxFitness( len(individual) )  # starts with maximum fitness
@@ -40,39 +42,56 @@ def queensFitness( individual ):
         for j in range(1,len(individual)-i):
             print(f'i={i}, j={j}, startfitness={fitness}') if __printdebug__ else None
             # other queen on the same line, decrease fitness by 1
-            fitness -= 1 if individual[i]==individual[i+j] else 0
+            fitness -= 10 if individual[i]==individual[i+j] else 0
             # other queen on the same ascendent diagnoal, decrease fitness by 1
-            fitness -= 1 if individual[i]==(individual[i+j]+j) else 0
+            fitness -= 10 if individual[i]==(individual[i+j]+j) else 0
             # other queen on the same descendent diagnoal, decrease fitness by 1
-            fitness -= 1 if individual[i]==(individual[i+j]-j) else 0
+            fitness -= 10 if individual[i]==(individual[i+j]-j) else 0
             print(f'i={i}, j={j}, stopfitness={fitness}\n') if __printdebug__ else None
     print(f'individual = {individual}, fitness = {fitness}') if __printdebug__ else None
     return fitness
 
-    
+def queensPlotSolution( title, fitness ):
+    dpi = 600
+    plt.ioff()
+    plt.rcParams['toolbar'] = 'None'
+    plt.figure(figsize=(6.4, 6.4), dpi=dpi)
+    plt.title(title)
+    plt.plot(fitness)
+    plt.savefig(title.replace(' ','_'))
+    plt.close('all')
+    return
+
 def queensBruteForce( individualSize ):
     solution = []
     firstindividual = []
     maxFitness = queensMaxFitness( individualSize )
     for i in range(1, individualSize+1):
         firstindividual += [i]
+    i=0
+    fitness = np.zeros(math.factorial(individualSize),dtype='i2')
     for individual in itertools.permutations(firstindividual,r=individualSize):
-        if( queensFitness(individual) == maxFitness ):
+        fitness[i] = queensFitness(individual)
+        if( fitness[i] == maxFitness ):
             solution += [individual]
+        i += 1
+    queensPlotSolution( f'{individualSize} Queens Problem', fitness )
     return solution
 
 def main():
     solutions={}
     # solve from n=1 to n=12 by brute force
     for n in range(1,13):
-        print(f'{datetime.now().replace(microsecond=0)}')
+        startTime=datetime.now()
         solutions[f'{n}_Queens'] = queensBruteForce(n)
-        print(f'\n\n{n} Queens Solutions ({len(solutions[f"{n}_Queens"])} best solutions):')
+        finishTime=datetime.now()
+        print( f'\n\nStart: {startTime.replace(microsecond=0)}, Finish:{finishTime.replace(microsecond=0)}, Running Time: {finishTime-startTime}, '
+              + f'{n} Queens Solutions ({len(solutions[f"{n}_Queens"])} best solutions)')
         print(f'solutions[f\'{n}_Queens\'] = {solutions[f"{n}_Queens"]}')
     
     # write solution to a file
-    with open('Solutions.csv','w') as f:
-        json.dump(solutions,f,indent=4)
+    with open('solutions-nqueens.json','w') as f:
+        json.dump(solutions,f,indent=1)
 
 if __name__ == '__main__':
     # track execution time
@@ -82,3 +101,5 @@ if __name__ == '__main__':
     # track execution time
     finishTime=datetime.now()
     print( f'\n\nStart: {startTime.replace(microsecond=0)}, Finish:{finishTime.replace(microsecond=0)}, Running Time: {finishTime-startTime}')
+
+    

@@ -52,10 +52,18 @@ def queensFitness( individual ):
     return fitness
 
 def queensPlotSolution( title, fitness ):
-    dpi = 120
+    if len(fitness)<1000:
+       dpi = 120
+       figsize = (16,16)
+    elif len(fitness)<10000:
+       dpi = 120
+       figsize = (32,32)
+    else:
+       dpi = 60
+       figsize = (128,128)
     plt.ioff()
     plt.rcParams['toolbar'] = 'None'
-    plt.figure(figsize=(6.4, 6.4), dpi=dpi)
+    plt.figure(figsize=figsize, dpi=dpi)
     plt.title(title)
     plt.plot(fitness)
     plt.savefig(title.replace(' ','_'))
@@ -78,43 +86,96 @@ def queensBruteForce( individualSize ):
         if( fitness[i] == maxFitness ):
             solution += [individual]
         i += 1
-    print(f'ploting solution..')
-    queensPlotSolution( f'{individualSize} Queens Problem', fitness )
+    if individualSize<10:
+        print(f'ploting solution... (len(fitness)={len(fitness)})')
+        queensPlotSolution( f'{individualSize} Queens Problem', fitness )
     print(f'Stopping queensBruteForce({individualSize})')
     return solution
 
 def queensPopulationFitness( population ):
-    ###
-    return maxfitness, maxfitness, totalfitness
+    populationFitness = np.zeros(len(population),dtype='i2')
+    maxFitness = 0
+    minFitness = queensMaxFitness(len(population[0]))
+    sumFitness = 0
 
-def queensReproduction( individual ):
-    ###
+    for i in range(len(population)):
+        populationFitness[i] = queensFitness(population[i])
+        maxFitness = max(populationFitness[i],maxFitness)
+        minFitness = min(populationFitness[i],minFitness)
+        sumFitness += populationFitness[i]
+
+    return populationFitness, maxFitness, minFitness, sumFitness
+
+def queensSelection( population, populationFitness ):
+    rouletteIndividual = random.randrange(sum(populationFitness))
+    for i in range(population):
+        if rouletteIndividual <= sum(populationFitness[:i]):
+            return population[i]
+        
+def queensReplicate( population, populationFitness ):
+    return queensSelection( population, populationFitness )
+    
+def queensMutation(  population, populationFitness ):
+    individual = queensSelection( population, populationFitness )
+    point1 = random.randrange(len(individual))
+    point2 = random.randrange(len(individual))
+    tempgene = individual[point1]
+    individual[point1] = individual[point2]
+    individual[point2] = tempgene
     return individual
 
-def queensMutation( individual ):
-    ###
+def queensCrossover(  population, populationFitness ):
+    individual1 = queensSelection( population, populationFitness )
+    individual2 = queensSelection( population, populationFitness )
+    
     return individual
 
-def queensCrossover( individual1, individual2 ):
-    ###
-    return individual
+def queensGeneticPlotStatistics( title, fitness ):
+    if len(fitness)<1000:
+       dpi = 120
+       figsize = (16,16)
+    elif len(fitness)<10000:
+       dpi = 120
+       figsize = (32,32)
+    else:
+       dpi = 60
+       figsize = (128,128)
+    plt.ioff()
+    plt.rcParams['toolbar'] = 'None'
+    plt.figure(figsize=figsize, dpi=dpi)
+    plt.title(title)
+    plt.plot(fitness)
+    plt.savefig(title.replace(' ','_'))
+    plt.close('all')
+    return
 
-def queensGenetic( individualSize, populationSize, weight_parameters, stop_generations, stop_maxfitness, stop_totalfitness ):
-    # weight_parameters = [ mutation_weight, reproduction_weight, crossover_weight ]
+def queensGenetic( individualSize, populationSize, weight_parameters, stop_generations, stop_maxFitness, stop_sumFitness ):
+    # weight_parameters = [ mutation_weight, replicate_weight, crossover_weight ]
     population = createPopulation( populationSize, individualSize)
-    generationPopulation = []
+    offsprings = []
     generation = 0
+    statistics = {}
+    statistics['generation'] = []
+    statistics['maxFitness'] = []
+    statistics['minFitness'] = []
+    statistics['sumFitness'] = []
     while( generation < stop_generations ):
-        maxfitness, maxfitness, totalfitness = queensPopulationFitness( population )
-        if( maxfitness >= stop_maxfitness):
+        populationFitness, maxFitness, minFitness, sumFitness = queensPopulationFitness( population )
+        if( maxFitness >= stop_maxfitness):
             break;
-        if( totalfitness >= stop_totalfitness):
+        if( sumFitness >= stop_sumFitness):
             break;
         while (len(generation)<populationSize):
+            rouletteOperation = random.randrange( sum(weight_parameters))
+            if rouuletteOperation < weight_parameters[0]: #mutation
+                offsprings += [queensMutation(population)]
+            elif roletteOperation < weight_parameters[0]+weight_parameters[1]: #replicate
+                offsprings += [queensReplicate(population)]
             # select operation
             # select individuals
             # perform operation
             # increment generation
+            generation += 1
         population = generationPopulation[:populationSize]
     return population
 

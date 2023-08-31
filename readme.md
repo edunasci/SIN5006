@@ -23,7 +23,7 @@ A solução deste problema será feita por meio de algoritmos genéticos. Com o 
 Duração da resolução do problema por força bruta:<br>
 Start: 2023-08-30 23:29:04, Finish:2023-08-31 03:57:08, Running Time: 4:28:04.291397<br>
 <br><br>
- python3 queens.py >queens.log &
- disown
- tail -f queens.log 
- 
+ python3 queens.py >queens.log & <br>
+ disown <br>
+ tail -f queens.log <br>
+<br><br>

@@ -108,9 +108,11 @@ def queensPopulationFitness( population ):
 
 def queensSelection( population, populationFitness ):
     rouletteIndividual = random.randrange(sum(populationFitness))
-    for i in range(population):
+    for i in range(len(population)):
+        print(F'i={i} ({rouletteIndividual} <= {sum(populationFitness[:i])}') if __printdebug__ else None
         if rouletteIndividual <= sum(populationFitness[:i]):
             return population[i]
+    return population[-1]
         
 def queensOverlap( population, populationFitness ):
     return queensSelection( population, populationFitness )
@@ -127,27 +129,39 @@ def queensMutation(  population, populationFitness ):
 def queensCrossover(  population, populationFitness ):
     individual1 = queensSelection( population, populationFitness )
     individual2 = queensSelection( population, populationFitness )
-    individual = individual1
-    
-    return individual
+    individualSize = len(individual1)
 
-def queensGeneticPlotStatistics( filename, parameters, fitness ):
-    if len(fitness)<1000:
-       dpi = 120
-       figsize = (16,16)
-    elif len(fitness)<10000:
-       dpi = 120
-       figsize = (32,32)
-    else:
-       dpi = 60
-       figsize = (128,128)
+    offspring1 = [0]*individualSize
+    offspring2 = [0]*individualSize
+    point1 = random.randrange(individualSize)
+
+    for i in range(point1, point1+int(individualSize/2)):
+        offspring1[i%individualSize] = individual1[i%individualSize]
+        offspring2[i%individualSize] = individual2[i%individualSize]
+    j=0
+    k=0
+    for i in range(individualSize):
+        if offspring1[i] == 0:
+            while(individual2[j] in offspring1):
+                j +=1
+            offspring1[i]=individual2[j]
+            while(individual1[k] in offspring2):
+                k +=1
+            offspring2[i]=individual1[k]
+    return offspring1, offspring2
+
+def queensGeneticPlotStatistics( filename, parameters, statistics ):
+    dpi = 120
+    figsize = (16,16)
     plt.ioff()
     plt.rcParams['toolbar'] = 'None'
     fig, ax = plt.subplots(figsize=figsize, dpi=dpi)
     #plt.figure(figsize=figsize, dpi=dpi)
-    ax.title(parameters)
-    ax.plot(fitness)
-    ax.legend( labels=['maxFitness', 'minFitness', 'sumFitness'] )
+    plt.title(parameters)
+    ax.plot(statistics[0])
+    ax.plot(statistics[1])
+    ax.plot(statistics[2])
+    plt.legend( labels=['maxFitness', 'minFitness', 'sumFitness'] )
     plt.savefig(filename)
     plt.close('all')
     return
@@ -156,16 +170,18 @@ def queensGenetic( individualSize, populationSize, weight_parameters, stop_gener
     # weight_parameters = [ mutation_weight, overlap_weight, crossover_weight ]
     population = createPopulation( populationSize, individualSize)
     offsprings = []
-    statistics = []
+    statistics = [[],[],[]]
     generation = 0
     while( generation < stop_generations ):
         populationFitness, maxFitness, minFitness, sumFitness = queensPopulationFitness( population )
-        statistics += [[maxFitness, minFitness, sumFitness]]
-        if( maxFitness >= stop_maxfitness):
+        statistics[0] += [maxFitness]
+        statistics[1] += [minFitness] 
+        statistics[2] += [sumFitness]
+        if( maxFitness >= stop_maxFitness):
             break;
         if( sumFitness >= stop_sumFitness):
             break;
-        while (len(generation)<populationSize):
+        while (generation<populationSize):
             rouletteOperation = random.randrange( sum(weight_parameters))
             if rouletteOperation < weight_parameters[0]: #mutation
                 offsprings += [queensMutation(population,populationFitness)]
@@ -173,14 +189,16 @@ def queensGenetic( individualSize, populationSize, weight_parameters, stop_gener
                 offsprings += [queensOverlap(population,populationFitness)]
             else: # crossover
                 offspring1, offspring2 = queensCrossover(population,populationFitness)
-                offsprings += [offspring1]+offspring2
+                offsprings += [offspring1]+[offspring2]
             generation += 1
         population = offsprings[:populationSize]
+    print(f'{individualSize} Queens Genetic, maxFitness={maxFitness}, minFitness={minFitness}, sumFitness={sumFitness}')
     queensGeneticPlotStatistics(f'{individualSize}_Queens_Genetic', 
                                 f'individualSize={individualSize}, populationSize={populationSize},'+
                                 ' weight_parameters={weight_parameters}, stop_generations={stop_generations},'+
                                 ' stop_maxFitness={stop_maxFitness}, stop_sumFitness={stop_sumFitness}', 
                                 statistics)
+    print(f'maxFitness={maxFitness}, minFitness={minFitness}, sumFitness={sumFitness}')
     return population
 
 def main_bruteforce():
@@ -207,10 +225,10 @@ def main_genetics():
         f.write('\n')
     for n in range(1,13):
         startTime=datetime.now()
-        solutions[f'{n}_Queens_Genetics'] = queensGenetic( n, 100, [5,35,60], 100, 1000000, 100000000 )
+        solutions[f'{n}_Queens'] = queensGenetic( n, 100, [5,35,60], 100, 1000000, 100000000 )
         finishTime=datetime.now()
-        print( f'\n\nStart: {startTime.replace(microsecond=0)}, Finish:{finishTime.replace(microsecond=0)}, Running Time: {finishTime-startTime}, '
-              + f'{n} Queens Solutions ({len(solutions[f"{n}_Queens"])} best solutions)')
+        print( f'\n\nStart: {startTime.replace(microsecond=0)}, Finish:{finishTime.replace(microsecond=0)}, Running Time: {finishTime-startTime}, ' +
+               f'{n} Queens Solutions ({len(solutions[f"{n}_Queens"])} best solutions)')
         print(f'solutions[f\'{n}_Queens\'] = {solutions[f"{n}_Queens"]}')
         # write solution to a file
         with open('solutions-nqueens.json','a') as f:
@@ -221,7 +239,7 @@ if __name__ == '__main__':
     # track execution time
     startTime=datetime.now()
     print(f'Start: {startTime.replace(microsecond=0)}\n\n')
-    main()
+    main_genetics()
     # track execution time
     finishTime=datetime.now()
     print( f'\n\nStart: {startTime.replace(microsecond=0)}, Finish:{finishTime.replace(microsecond=0)}, Running Time: {finishTime-startTime}')

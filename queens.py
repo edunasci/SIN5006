@@ -181,7 +181,7 @@ def queensGenetic( individualSize, populationSize, weight_parameters, stop_gener
             break;
         if( sumFitness >= stop_sumFitness):
             break;
-        while (generation<populationSize):
+        while (len(offsprings)<populationSize):
             rouletteOperation = random.randrange( sum(weight_parameters))
             if rouletteOperation < weight_parameters[0]: #mutation
                 offsprings += [queensMutation(population,populationFitness)]
@@ -190,15 +190,18 @@ def queensGenetic( individualSize, populationSize, weight_parameters, stop_gener
             else: # crossover
                 offspring1, offspring2 = queensCrossover(population,populationFitness)
                 offsprings += [offspring1]+[offspring2]
-            generation += 1
         population = offsprings[:populationSize]
+        generation += 1
     print(f'{individualSize} Queens Genetic, maxFitness={maxFitness}, minFitness={minFitness}, sumFitness={sumFitness}')
     queensGeneticPlotStatistics(f'{individualSize}_Queens_Genetic', 
                                 f'individualSize={individualSize}, populationSize={populationSize},'+
-                                ' weight_parameters={weight_parameters}, stop_generations={stop_generations},'+
-                                ' stop_maxFitness={stop_maxFitness}, stop_sumFitness={stop_sumFitness}', 
+                                f' weight_parameters={weight_parameters}, stop_generations={stop_generations},'+
+                                f' stop_maxFitness={stop_maxFitness}, stop_sumFitness={stop_sumFitness}', 
                                 statistics)
     print(f'maxFitness={maxFitness}, minFitness={minFitness}, sumFitness={sumFitness}')
+    print(f'statistics[0]={statistics[0]}')
+    print(f'statistics[1]={statistics[1]}')
+    print(f'statistics[2]={statistics[2]}')
     return population
 
 def main_bruteforce():

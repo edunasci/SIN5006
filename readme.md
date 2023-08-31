@@ -19,9 +19,12 @@ A solução deste problema será feita por meio de algoritmos genéticos. Com o 
   10 Queens Solutions   (724 best solutions)<br>
   11 Queens Solutions  (2680 best solutions)<br>
   12 Queens Solutions (14200 best solutions)<br>
+<br>
+Duração da resolução do problema por força bruta:<br>
+Start: 2023-08-30 23:29:04, Finish:2023-08-31 03:57:08, Running Time: 4:28:04.291397<br>
 <br><br>
-
- python3 queens.py >queens.log &
- disown
- tail -f queens.log 
- 
+Como executar a o programa para resolver o problema:<br>
+python3 queens.py >queens.log & <br>
+disown <br>
+tail -f queens.log <br>
+<br><br>

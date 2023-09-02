@@ -104,7 +104,7 @@ def queensPopulationFitness( population ):
         minFitness = min(populationFitness[i],minFitness)
         sumFitness += populationFitness[i]
 
-    return populationFitness, maxFitness, minFitness, sumFitness
+    return populationFitness, maxFitness, minFitness, sumFitness/len(population)
 
 def queensSelection( population, populationFitness ):
     rouletteIndividual = random.randrange(sum(populationFitness))
@@ -163,42 +163,57 @@ def queensGeneticPlotStatistics( filename, parameters, statistics ):
     ax.plot(statistics[2])
     plt.legend( labels=['maxFitness', 'minFitness', 'sumFitness'] )
     plt.savefig(filename)
+    plt.show()
     plt.close('all')
     return
 
-def queensGenetic( individualSize, populationSize, weight_parameters, stop_generations, stop_maxFitness, stop_sumFitness ):
+def queensGenetic( individualSize, populationSize, weight_parameters, stop_generations, stop_maxFitness, stop_avgFitness ):
     # weight_parameters = [ mutation_weight, overlap_weight, crossover_weight ]
+    print(f'queensGenetic( {individualSize}, {populationSize}, [ mutation_weight, overlap_weight, crossover_weight ] = {weight_parameters}, {stop_generations}, {stop_maxFitness}, {stop_avgFitness} )')
     population = createPopulation( populationSize, individualSize)
-    offsprings = []
     statistics = [[],[],[]]
     generation = 0
     while( generation < stop_generations ):
-        populationFitness, maxFitness, minFitness, sumFitness = queensPopulationFitness( population )
+        offsprings = []
+        populationFitness, maxFitness, minFitness, avgFitness = queensPopulationFitness( population )
         statistics[0] += [maxFitness]
         statistics[1] += [minFitness] 
-        statistics[2] += [sumFitness]
+        statistics[2] += [avgFitness]
+        # print(f'individualSize = {individualSize}, populationSize = {len(population)}, generation = {generation:4d}, maxFitness={maxFitness}, minFitness={minFitness}, avgFitness={avgFitness}')
         if( maxFitness >= stop_maxFitness):
             break;
-        if( sumFitness >= stop_sumFitness):
+        if( avgFitness >= stop_avgFitness):
             break;
         while (len(offsprings)<populationSize):
             rouletteOperation = random.randrange( sum(weight_parameters))
+            # print(f'{len(offsprings)}, rouletteOperation = {rouletteOperation}, weight_parameters = {weight_parameters} ')
             if rouletteOperation < weight_parameters[0]: #mutation
-                offsprings += [queensMutation(population,populationFitness)]
+                print(f'mutation') if __printdebug__ else None
+                individual = queensMutation(population,populationFitness)
+                if not individual in offsprings:
+                    offsprings += [individual]
             elif rouletteOperation < weight_parameters[0]+weight_parameters[1]: #overlap
-                offsprings += [queensOverlap(population,populationFitness)]
+                print(f'overlap') if __printdebug__ else None
+                individual = queensOverlap(population,populationFitness)
+                if not individual in offsprings: 
+                    offsprings += [individual]
             else: # crossover
+                print(f'crossover') if __printdebug__ else None
                 offspring1, offspring2 = queensCrossover(population,populationFitness)
-                offsprings += [offspring1]+[offspring2]
+                if not (offspring1 in offsprings or offspring2 in offsprings): 
+                    offsprings += [offspring1]+[offspring2]
+            #
         population = offsprings[:populationSize]
         generation += 1
-    print(f'{individualSize} Queens Genetic, maxFitness={maxFitness}, minFitness={minFitness}, sumFitness={sumFitness}')
+    print(f'{individualSize} Queens Genetic, generations={generation}, maxFitness={maxFitness}, minFitness={minFitness}, avgFitness={avgFitness}')
     queensGeneticPlotStatistics(f'{individualSize}_Queens_Genetic', 
-                                f'individualSize={individualSize}, populationSize={populationSize},'+
-                                f' weight_parameters={weight_parameters}, stop_generations={stop_generations},'+
-                                f' stop_maxFitness={stop_maxFitness}, stop_sumFitness={stop_sumFitness}', 
+                                f'generations={generation}, ' +
+                                f'individualSize={individualSize}, populationSize={populationSize}, \n'+
+                                f'weight_parameters ([mutation_weight,overlap_weight,crossover_weight])={weight_parameters}, stop_generations={stop_generations}, '+
+                                f'stop_maxFitness={stop_maxFitness}, stop_avgFitness={stop_avgFitness}', 
                                 statistics)
-    print(f'maxFitness={maxFitness}, minFitness={minFitness}, sumFitness={sumFitness}')
+    #print(f'maxFitness={maxFitness}, minFitness={minFitness}, avgFitness={avgFitness}')
+    print(f'populationFitness={populationFitness}')
     print(f'statistics[0]={statistics[0]}')
     print(f'statistics[1]={statistics[1]}')
     print(f'statistics[2]={statistics[2]}')
@@ -207,7 +222,8 @@ def queensGenetic( individualSize, populationSize, weight_parameters, stop_gener
 def main_bruteforce():
     solutions={}
     # solve from n=1 to n=12 by brute force
-    with open('solutions-nqueens.json','w') as f:
+    filename = 'solutions-nqueens-bruteforce.json'
+    with open(filename,'w') as f:
         f.write('\n')
     for n in range(1,13):
         startTime=datetime.now()
@@ -217,24 +233,25 @@ def main_bruteforce():
               + f'{n} Queens Solutions ({len(solutions[f"{n}_Queens"])} best solutions)')
         print(f'solutions[f\'{n}_Queens\'] = {solutions[f"{n}_Queens"]}')
         # write solution to a file
-        with open('solutions-nqueens.json','a') as f:
+        with open(filename,'a') as f:
             json.dump({f'{n}_Queens':solutions[f'{n}_Queens']},f)
             f.write('\n')
 
 def main_genetics():
     solutions={}
-    # solve from n=1 to n=12 by brute force
-    with open('solutions-nqueens-genetics.json','w') as f:
+    # solve from n=5 to n=12 by brute force
+    filename = 'solutions-nqueens-genetics.json'
+    with open(filename,'w') as f:
         f.write('\n')
-    for n in range(1,13):
+    for n in range(13,20):
         startTime=datetime.now()
-        solutions[f'{n}_Queens'] = queensGenetic( n, 100, [5,35,60], 100, 1000000, 100000000 )
+        solutions[f'{n}_Queens'] = queensGenetic( n, 100, [2,2,96], 200, queensMaxFitness(n), 10000 )
         finishTime=datetime.now()
         print( f'\n\nStart: {startTime.replace(microsecond=0)}, Finish:{finishTime.replace(microsecond=0)}, Running Time: {finishTime-startTime}, ' +
                f'{n} Queens Solutions ({len(solutions[f"{n}_Queens"])} best solutions)')
         print(f'solutions[f\'{n}_Queens\'] = {solutions[f"{n}_Queens"]}')
         # write solution to a file
-        with open('solutions-nqueens.json','a') as f:
+        with open(filename,'a') as f:
             json.dump({f'{n}_Queens':solutions[f'{n}_Queens']},f)
             f.write('\n')
 

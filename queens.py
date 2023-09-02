@@ -163,7 +163,7 @@ def queensGeneticPlotStatistics( filename, parameters, statistics ):
     ax.plot(statistics[2])
     plt.legend( labels=['maxFitness', 'minFitness', 'sumFitness'] )
     plt.savefig(filename)
-    plt.show()
+    plt.show() if __printdebug__ else None
     plt.close('all')
     return
 

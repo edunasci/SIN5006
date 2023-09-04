@@ -88,7 +88,7 @@ def queensBruteForce( individualSize ):
         i += 1
     if individualSize<10:
         print(f'ploting solution... (len(fitness)={len(fitness)})')
-        queensPlotSolution( f'{individualSize} Queens Problem', fitness )
+        queensPlotSolution( f'img/{individualSize} Queens Problem', fitness )
     print(f'Stopping queensBruteForce({individualSize})')
     return solution
 
@@ -118,37 +118,35 @@ def queensOverlap( population, populationFitness ):
     return queensSelection( population, populationFitness )
     
 def queensMutation(  population, populationFitness ):
+    # chapter 32 - Mutation Operators (Back et al, Evolationary Computation 1: Basic Algorithms and Operators)
+    # 32.3.3 Insert, swap, and scramble operators
+    # SWAP 
     individual = queensSelection( population, populationFitness )
-    point1 = random.randrange(len(individual))
-    point2 = random.randrange(len(individual))
+    individualSize = len(individual)
+    point1 = random.randrange(individualSize)
+    point2 = random.randrange(individualSize)
     tempgene = individual[point1]
     individual[point1] = individual[point2]
     individual[point2] = tempgene
     return individual
 
 def queensCrossover(  population, populationFitness ):
+    # chapter 33 -Recombination - (Back et al, Evolationary Computation 1: Basic Algorithms and Operators)
+    # 33.3 Permutations 
+    # Davis’s order crossover
     individual1 = queensSelection( population, populationFitness )
     individual2 = queensSelection( population, populationFitness )
     individualSize = len(individual1)
-
-    offspring1 = [0]*individualSize
-    offspring2 = [0]*individualSize
     point1 = random.randrange(individualSize)
-
-    for i in range(point1, point1+int(individualSize/2)):
-        offspring1[i%individualSize] = individual1[i%individualSize]
-        offspring2[i%individualSize] = individual2[i%individualSize]
-    j=0
-    k=0
+    point2 = random.randrange(individualSize)
+    point1,point2 = min(point1,point2),max(point1,point2)+1
+    offspring = [0]*individualSize
+    offspring[point1:point2] = individual1[point1:point2]
     for i in range(individualSize):
-        if offspring1[i] == 0:
-            while(individual2[j] in offspring1):
-                j +=1
-            offspring1[i]=individual2[j]
-            while(individual1[k] in offspring2):
-                k +=1
-            offspring2[i]=individual1[k]
-    return offspring1, offspring2
+        if not individual2[i] in offspring:
+            offspring[point2%individualSize] = individual2[i]
+            point2 += 1
+    return offspring
 
 def queensGeneticPlotStatistics( filename, parameters, statistics ):
     dpi = 120
@@ -162,6 +160,34 @@ def queensGeneticPlotStatistics( filename, parameters, statistics ):
     ax.plot(statistics[1])
     ax.plot(statistics[2])
     plt.legend( labels=['maxFitness', 'minFitness', 'sumFitness'] )
+    plt.savefig(filename)
+    plt.show() if __printdebug__ else None
+    plt.close('all')
+    return
+
+def queensGeneticPlotChessboard( filename, title, individual ):
+    dpi = 120
+    figsize = (8,8)
+    black_queen = '\u265b'
+    n=len(individual)
+    plt.ioff()
+    plt.rcParams['toolbar'] = 'None'
+    fig, ax = plt.subplots(figsize=figsize, dpi=dpi)
+    #plt.figure(figsize=figsize, dpi=dpi)
+    plt.title(title)
+    #create chessboard
+    board = []
+    for i in range(n):
+        line=[]
+        for j in range(n):
+            line += [([((i+j)%2)*63+128]*3)]
+        board += [line]
+    ax.set_axis_off()
+    ax.imshow(board,origin='lower',extent=(0,n,0,n))
+    for i in range(n):
+        ax.text(i+0.5,(individual[i]-0.5),black_queen,
+                ha='center',va='center',color='black',
+                fontweight='bold', fontfamily='monospace',fontsize=20)
     plt.savefig(filename)
     plt.show() if __printdebug__ else None
     plt.close('all')
@@ -185,33 +211,34 @@ def queensGenetic( individualSize, populationSize, weight_parameters, stop_gener
         if( avgFitness >= stop_avgFitness):
             break;
         while (len(offsprings)<populationSize):
-            rouletteOperation = random.randrange( sum(weight_parameters))
+            rouletteOperation = random.randrange( sum(weight_parameters) )
             # print(f'{len(offsprings)}, rouletteOperation = {rouletteOperation}, weight_parameters = {weight_parameters} ')
             if rouletteOperation < weight_parameters[0]: #mutation
                 print(f'mutation') if __printdebug__ else None
                 individual = queensMutation(population,populationFitness)
-                if not individual in offsprings:
-                    offsprings += [individual]
             elif rouletteOperation < weight_parameters[0]+weight_parameters[1]: #overlap
                 print(f'overlap') if __printdebug__ else None
                 individual = queensOverlap(population,populationFitness)
-                if not individual in offsprings: 
-                    offsprings += [individual]
             else: # crossover
                 print(f'crossover') if __printdebug__ else None
-                offspring1, offspring2 = queensCrossover(population,populationFitness)
-                if not (offspring1 in offsprings or offspring2 in offsprings): 
-                    offsprings += [offspring1]+[offspring2]
+                individual = queensCrossover(population,populationFitness)
+            if not individual in offsprings:  # add individual, if not repeated in offsprings
+                offsprings += [individual]
             #
         population = offsprings[:populationSize]
         generation += 1
     print(f'{individualSize} Queens Genetic, generations={generation}, maxFitness={maxFitness}, minFitness={minFitness}, avgFitness={avgFitness}')
-    queensGeneticPlotStatistics(f'{individualSize}_Queens_Genetic', 
+    queensGeneticPlotStatistics(f'img/{individualSize}_Queens_Genetic', 
                                 f'generations={generation}, ' +
                                 f'individualSize={individualSize}, populationSize={populationSize}, \n'+
                                 f'weight_parameters ([mutation_weight,overlap_weight,crossover_weight])={weight_parameters}, stop_generations={stop_generations}, '+
                                 f'stop_maxFitness={stop_maxFitness}, stop_avgFitness={stop_avgFitness}', 
                                 statistics)
+    individual = population[list(populationFitness).index(max(populationFitness))]
+    queensGeneticPlotChessboard( f'img/{individualSize}_Queens_Genetic_Chessboard', 
+                                f'{individualSize} Queens - Solution ={individual}\n'+
+                                f'Fitness = {max(populationFitness)} of {queensMaxFitness(individualSize)}', 
+                                individual)
     #print(f'maxFitness={maxFitness}, minFitness={minFitness}, avgFitness={avgFitness}')
     print(f'populationFitness={populationFitness}')
     print(f'statistics[0]={statistics[0]}')
@@ -243,12 +270,12 @@ def main_genetics():
     filename = 'solutions-nqueens-genetics.json'
     with open(filename,'w') as f:
         f.write('\n')
-    for n in range(13,20):
+    for n in range(5,26):
         startTime=datetime.now()
-        solutions[f'{n}_Queens'] = queensGenetic( n, 100, [2,2,96], 200, queensMaxFitness(n), 10000 )
+        solutions[f'{n}_Queens'] = queensGenetic( n, 100, [2,2,96], 2000, queensMaxFitness(n), 10000 )
         finishTime=datetime.now()
         print( f'\n\nStart: {startTime.replace(microsecond=0)}, Finish:{finishTime.replace(microsecond=0)}, Running Time: {finishTime-startTime}, ' +
-               f'{n} Queens Solutions ({len(solutions[f"{n}_Queens"])} best solutions)')
+               f'{n} Queens Solutions')
         print(f'solutions[f\'{n}_Queens\'] = {solutions[f"{n}_Queens"]}')
         # write solution to a file
         with open(filename,'a') as f:
@@ -264,3 +291,5 @@ if __name__ == '__main__':
     finishTime=datetime.now()
     print( f'\n\nStart: {startTime.replace(microsecond=0)}, Finish:{finishTime.replace(microsecond=0)}, Running Time: {finishTime-startTime}')
 
+### Queens Genetics 2000:
+### Start: 2023-09-02 15:28:43, Finish:2023-09-02 15:46:24, Running Time: 0:17:41.784603

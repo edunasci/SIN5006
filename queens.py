@@ -34,7 +34,7 @@ def createPopulation( populationSize, individualSize ):
     return population
 
 def queensMaxFitness( individualSize ):
-    return((1+individualSize)*individualSize/2*10+1)
+    return(int((1+individualSize)*individualSize/2*10+1))
 
 def queensFitness( individual ):
     fitness = queensMaxFitness( len(individual) )  # starts with maximum fitness
@@ -79,7 +79,7 @@ def queensBruteForce( individualSize ):
         firstindividual += [i]
     i=0
     print(f'initializing fitness..')
-    fitness = np.zeros(math.factorial(individualSize),dtype='i2')
+    fitness = np.zeros(math.factorial(individualSize),'i2')
     print(f'starting permutations..')
     for individual in itertools.permutations(firstindividual,r=individualSize):
         fitness[i] = queensFitness(individual)
@@ -93,24 +93,22 @@ def queensBruteForce( individualSize ):
     return solution
 
 def queensPopulationFitness( population ):
-    populationFitness = np.zeros(len(population),dtype='i2')
+    populationFitness = np.zeros(len(population),'i2')
     maxFitness = 0
     minFitness = queensMaxFitness(len(population[0]))
     sumFitness = 0
-
     for i in range(len(population)):
         populationFitness[i] = queensFitness(population[i])
         maxFitness = max(populationFitness[i],maxFitness)
         minFitness = min(populationFitness[i],minFitness)
         sumFitness += populationFitness[i]
-
     return populationFitness, maxFitness, minFitness, sumFitness/len(population)
 
 def queensSelection( population, populationFitness ):
     rouletteIndividual = random.randrange(sum(populationFitness))
     for i in range(len(population)):
         print(F'i={i} ({rouletteIndividual} <= {sum(populationFitness[:i])}') if __printdebug__ else None
-        if rouletteIndividual <= sum(populationFitness[:i]):
+        if rouletteIndividual < sum(populationFitness[:i]):
             return population[i]
     return population[-1]
         
@@ -123,12 +121,14 @@ def queensMutation(  population, populationFitness ):
     # SWAP 
     individual = queensSelection( population, populationFitness )
     individualSize = len(individual)
+    offspring = individual[:]
     point1 = random.randrange(individualSize)
     point2 = random.randrange(individualSize)
-    tempgene = individual[point1]
-    individual[point1] = individual[point2]
-    individual[point2] = tempgene
-    return individual
+    while point2 == point1:
+        point2 = random.randrange(individualSize)
+    offspring[point1]=individual[point2]
+    offspring[point2]=individual[point1]
+    return offspring
 
 def queensCrossover(  population, populationFitness ):
     # chapter 33 -Recombination - (Back et al, Evolationary Computation 1: Basic Algorithms and Operators)
@@ -139,6 +139,8 @@ def queensCrossover(  population, populationFitness ):
     individualSize = len(individual1)
     point1 = random.randrange(individualSize)
     point2 = random.randrange(individualSize)
+    while point2 == point1:
+        point2 = random.randrange(individualSize)
     point1,point2 = min(point1,point2),max(point1,point2)+1
     offspring = [0]*individualSize
     offspring[point1:point2] = individual1[point1:point2]
@@ -194,8 +196,8 @@ def queensGeneticPlotChessboard( filename, title, individual ):
     return
 
 def queensGenetic( individualSize, populationSize, weight_parameters, stop_generations, stop_maxFitness, stop_avgFitness ):
-    # weight_parameters = [ mutation_weight, overlap_weight, crossover_weight ]
-    print(f'queensGenetic( {individualSize}, {populationSize}, [ mutation_weight, overlap_weight, crossover_weight ] = {weight_parameters}, {stop_generations}, {stop_maxFitness}, {stop_avgFitness} )')
+    # weight_parameters = [ mutation_weight, overlap_weight, crossover_weight, elitism_weight ]
+    print(f'queensGenetic( {individualSize}, {populationSize}, [ mutation_weight, overlap_weight, crossover_weight, elitism_weight ] = {weight_parameters}, {stop_generations}, {stop_maxFitness}, {stop_avgFitness} )')
     population = createPopulation( populationSize, individualSize)
     statistics = [[],[],[]]
     generation = 0
@@ -211,7 +213,7 @@ def queensGenetic( individualSize, populationSize, weight_parameters, stop_gener
         if( avgFitness >= stop_avgFitness):
             break;
         while (len(offsprings)<populationSize):
-            rouletteOperation = random.randrange( sum(weight_parameters) )
+            rouletteOperation = random.randrange( sum(weight_parameters[0:3]) )
             # print(f'{len(offsprings)}, rouletteOperation = {rouletteOperation}, weight_parameters = {weight_parameters} ')
             if rouletteOperation < weight_parameters[0]: #mutation
                 print(f'mutation') if __printdebug__ else None
@@ -222,16 +224,60 @@ def queensGenetic( individualSize, populationSize, weight_parameters, stop_gener
             else: # crossover
                 print(f'crossover') if __printdebug__ else None
                 individual = queensCrossover(population,populationFitness)
-            if not individual in offsprings:  # add individual, if not repeated in offsprings
+            if not individual in offsprings:  # add individual, if not repeated offspring
                 offsprings += [individual]
             #
-        population = offsprings[:populationSize]
+        offsprings = offsprings[:populationSize]
+        # apply elitism
+        elite =[]
+        i = 0
+        while len(elite) < weight_parameters[3] and len(elite)<populationSize:
+            if populationFitness[i] == max(populationFitness):
+               #print(f'generation = {generation:4d}, max(populationFitness) = {max(populationFitness)}, population[{i:3d}]={population[i]} ')
+               print(f'generation = {generation:4d}, population[{i:3d}]={population[i]} = {generation:4d}, fitness({population[i]} = {populationFitness[i]}, max(populationFitness)={max(populationFitness)}') if __printdebug__ else None
+               populationFitness[i] = 0
+               elite += [population[i]]
+            i += 1
+            i = i%populationSize
+        offspringsFitness, maxOffspringsFitness, minOffpringsFitness, avgOffspringsFitness = queensPopulationFitness( offsprings )
+        i = 0
+        elitetmp = elite
+        while len(elite) > 0:
+            if elite[-1] in offsprings:
+                elite = elite[:-1] # do not duplicate
+                continue
+            if offspringsFitness[i] == min(offspringsFitness):
+                offspringsFitness[i] = queensFitness(elite[-1])
+                offsprings[i]= elite[-1]
+                elite = elite[:-1]
+            i += 1
+            i = i%populationSize
+        offspringsFitness, maxOffspringsFitness, minOffpringsFitness, avgOffspringsFitness = queensPopulationFitness( offsprings )
+        if maxOffspringsFitness < maxFitness:
+            print(f'####################################################')
+            print(f'Fitness Error')
+            print(f'####################################################')
+            print(f'maxOffspringsFitness({maxOffspringsFitness}) < maxFitness({maxFitness})')
+            for i in range(len(elitetmp)):
+                print( f'fitness = {queensFitness(elitetmp[i])}, {elitetmp[i]}, in offsprings = {elitetmp[i] in offsprings}' )
+            populationFitness, maxFitness, minFitness, avgFitness = queensPopulationFitness( population )
+            print(f'')
+            print(f'maxOffspringsFitness({maxOffspringsFitness}) < maxFitness({maxFitness}) (after recalc)')
+            print(f'')
+            for i in range(len(population)):
+                if populationFitness[i] == maxFitness:
+                    print(f'populationFitness[{i}]={populationFitness[i]}, population[{i}]={population[i]}')
+            print(f'population = {population}')
+            print(f'offsprings = {offsprings}')
+            print(f'####################################################')
+            exit(-1)
+        population = offsprings
         generation += 1
     print(f'{individualSize} Queens Genetic, generations={generation}, maxFitness={maxFitness}, minFitness={minFitness}, avgFitness={avgFitness}')
     queensGeneticPlotStatistics(f'img/{individualSize}_Queens_Genetic', 
                                 f'generations={generation}, ' +
                                 f'individualSize={individualSize}, populationSize={populationSize}, \n'+
-                                f'weight_parameters ([mutation_weight,overlap_weight,crossover_weight])={weight_parameters}, stop_generations={stop_generations}, '+
+                                f'weight_parameters ([mutation_weight,overlap_weight,crossover_weight,elitism_weight])={weight_parameters}, stop_generations={stop_generations}, '+
                                 f'stop_maxFitness={stop_maxFitness}, stop_avgFitness={stop_avgFitness}', 
                                 statistics)
     individual = population[list(populationFitness).index(max(populationFitness))]
@@ -266,13 +312,13 @@ def main_bruteforce():
 
 def main_genetics():
     solutions={}
-    # solve from n=5 to n=12 by brute force
     filename = 'solutions-nqueens-genetics.json'
     with open(filename,'w') as f:
         f.write('\n')
-    for n in range(5,26):
+    # solve from n=5 to n=25 by Genetic Algorithm
+    for n in range(25,26):
         startTime=datetime.now()
-        solutions[f'{n}_Queens'] = queensGenetic( n, 100, [2,2,96], 2000, queensMaxFitness(n), 10000 )
+        solutions[f'{n}_Queens'] = queensGenetic( n, 100, [2,2,96,5], 2000, queensMaxFitness(n), 10000 )
         finishTime=datetime.now()
         print( f'\n\nStart: {startTime.replace(microsecond=0)}, Finish:{finishTime.replace(microsecond=0)}, Running Time: {finishTime-startTime}, ' +
                f'{n} Queens Solutions')

@@ -36,29 +36,34 @@ def printchessboard():
     plt.rcParams['toolbar'] = 'None'
 
     nCols = 2
-    nRows = 2
-    n=8 
-    fig, axs = plt.subplots(nCols,nRows,figsize=(6.4, 6.4), dpi=dpi)
+    nRows = 1
+    sizes=[4,6] 
+    titles=['4 rainhas','6 rainhas']
+    fig, axs = plt.subplots(nRows, nCols,figsize=(6.4, 6.4), dpi=dpi)
 
     board = []
-    for i in range(n):
-        line=[]
-        for j in range(n):
-            line += [([((i+j)%2)*63+128]*3)]
-        board += [line]
-
+    for b in range(len(sizes)):
+        board +=[[]]
+        n=sizes[b]
+        for i in range(n):
+            line=[]
+            for j in range(n):
+                line += [([((i+j)%2)*63+128]*3)]
+            board[b] += [line]
+        print(f'b={b}, board[b] ={board[b]}')
     print(board)
 
     #text = f'Chess pieces: \u2654 \u2655 \u2656 \u2657 \u2658 \u2659 \u265a \u265b \u265c \u265d \u265e \u265f' 
     #axs[i,j].text(0., 0., text, ha='left', va='bottom', color='black')
     text = chess_pieces['black_queen']
     for i in range(nCols): 
-        for j in range(nRows):
-            axs[i,j].set_axis_off()
-            axs[i,j].imshow(board,origin='lower',extent=(0,n,0,n))
-            for k in range(n):
-                axs[i,j].text(k+0.5,k+0.5,text,ha='center',va='center',color='black',
-                              fontweight='bold', fontfamily='monospace',fontsize=20)
+        n = sizes[i]
+        axs[i].set_axis_off()
+        axs[i].title.set_text(titles[i])
+        axs[i].imshow(board[i],origin='lower',extent=(0,n,0,n))
+        for k in range(n):
+            axs[i].text(k+0.5,k+0.5,text,ha='center',va='center',color='black',
+                        fontweight='bold', fontfamily='monospace',fontsize=20)
 
     #plt.text(0., 0., text, ha='left', va='bottom', color='black')
 

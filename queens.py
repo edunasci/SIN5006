@@ -254,22 +254,7 @@ def queensGenetic( individualSize, populationSize, weight_parameters, stop_gener
             i = i%populationSize
         offspringsFitness, maxOffspringsFitness, minOffpringsFitness, avgOffspringsFitness = queensPopulationFitness( offsprings )
         if maxOffspringsFitness < maxFitness:
-            print(f'####################################################')
-            print(f'Fitness Error')
-            print(f'####################################################')
-            print(f'maxOffspringsFitness({maxOffspringsFitness}) < maxFitness({maxFitness})')
-            for i in range(len(elitetmp)):
-                print( f'fitness = {queensFitness(elitetmp[i])}, {elitetmp[i]}, in offsprings = {elitetmp[i] in offsprings}' )
-            populationFitness, maxFitness, minFitness, avgFitness = queensPopulationFitness( population )
-            print(f'')
-            print(f'maxOffspringsFitness({maxOffspringsFitness}) < maxFitness({maxFitness}) (after recalc)')
-            print(f'')
-            for i in range(len(population)):
-                if populationFitness[i] == maxFitness:
-                    print(f'populationFitness[{i}]={populationFitness[i]}, population[{i}]={population[i]}')
-            print(f'population = {population}')
-            print(f'offsprings = {offsprings}')
-            print(f'####################################################')
+            print(f'Error maxOffspringsFitness({maxOffspringsFitness}) < maxFitness({maxFitness})')
             exit(-1)
         population = offsprings
         generation += 1
@@ -315,8 +300,8 @@ def main_genetics():
     filename = 'solutions-nqueens-genetics.json'
     with open(filename,'w') as f:
         f.write('\n')
-    # solve from n=5 to n=25 by Genetic Algorithm
-    for n in range(25,26):
+    # solve from n=5 to n=31 by Genetic Algorithm
+    for n in range(5,31):
         startTime=datetime.now()
         solutions[f'{n}_Queens'] = queensGenetic( n, 100, [2,2,96,5], 2000, queensMaxFitness(n), 10000 )
         finishTime=datetime.now()

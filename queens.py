@@ -161,7 +161,7 @@ def queensGeneticPlotStatistics( filename, parameters, statistics ):
     ax.plot(statistics[0])
     ax.plot(statistics[1])
     ax.plot(statistics[2])
-    plt.legend( labels=['maxFitness', 'minFitness', 'sumFitness'] )
+    plt.legend( labels=['maxFitness', 'minFitness', 'avgFitness'] )
     plt.savefig(filename)
     plt.show() if __printdebug__ else None
     plt.close('all')
@@ -213,7 +213,7 @@ def queensGenetic( individualSize, populationSize, weight_parameters, stop_gener
         if( avgFitness >= stop_avgFitness):
             break;
         while (len(offsprings)<populationSize):
-            rouletteOperation = random.randrange( sum(weight_parameters[0:3]) )
+            rouletteOperation = random.randrange( sum(weight_parameters[0:2]) )
             # print(f'{len(offsprings)}, rouletteOperation = {rouletteOperation}, weight_parameters = {weight_parameters} ')
             if rouletteOperation < weight_parameters[0]: #mutation
                 print(f'mutation') if __printdebug__ else None
@@ -300,10 +300,11 @@ def main_genetics():
     filename = 'solutions-nqueens-genetics.json'
     with open(filename,'w') as f:
         f.write('\n')
-    # solve from n=5 to n=31 by Genetic Algorithm
-    for n in range(5,31):
+    # solve from n=5 to n=50 by Genetic Algorithm
+    for n in range(5,51):
         startTime=datetime.now()
-        solutions[f'{n}_Queens'] = queensGenetic( n, 100, [2,2,96,5], 2000, queensMaxFitness(n), 10000 )
+        # weight_parameters = [ mutation_weight, overlap_weight, crossover_weight, elitism_weight ]
+        solutions[f'{n}_Queens'] = queensGenetic( n, 100, [1,0,99,5], 2000, queensMaxFitness(n), 32000 )
         finishTime=datetime.now()
         print( f'\n\nStart: {startTime.replace(microsecond=0)}, Finish:{finishTime.replace(microsecond=0)}, Running Time: {finishTime-startTime}, ' +
                f'{n} Queens Solutions')

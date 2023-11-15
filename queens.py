@@ -80,11 +80,15 @@ def queensBruteForce( individualSize ):
     i=0
     print(f'initializing fitness..')
     fitness = np.zeros(math.factorial(individualSize),'i2')
+    startLapTime=datetime.now()
     print(f'starting permutations..')
     for individual in itertools.permutations(firstindividual,r=individualSize):
         fitness[i] = queensFitness(individual)
         if( fitness[i] == maxFitness ):
             solution += [individual]
+            finishLapTime=datetime.now()
+            print( f'Start Solution {len(solution)} Search at: {startLapTime.replace(microsecond=0)}, Find Solution {len(solution)} at:{finishLapTime.replace(microsecond=0)}, Running Time: {finishLapTime-startLapTime}')
+            startLapTime=datetime.now()
         i += 1
     if individualSize<10:
         print(f'ploting solution... (len(fitness)={len(fitness)})')
@@ -315,13 +319,22 @@ def main_genetics():
             f.write('\n')
 
 if __name__ == '__main__':
+    """
     # track execution time
     startTime=datetime.now()
-    print(f'Start: {startTime.replace(microsecond=0)}\n\n')
+    print(f'Genetics Start: {startTime.replace(microsecond=0)}\n\n')
     main_genetics()
     # track execution time
     finishTime=datetime.now()
-    print( f'\n\nStart: {startTime.replace(microsecond=0)}, Finish:{finishTime.replace(microsecond=0)}, Running Time: {finishTime-startTime}')
+    print( f'\n\Genetics nStart: {startTime.replace(microsecond=0)}, Finish:{finishTime.replace(microsecond=0)}, Running Time: {finishTime-startTime}')
+    """
+    # track execution time
+    startTime=datetime.now()
+    print(f'\n\nBrute Force Start: {startTime.replace(microsecond=0)}\n\n')
+    main_bruteforce()
+    # track execution time
+    finishTime=datetime.now()
+    print( f'\n\nBrute Force Start: {startTime.replace(microsecond=0)}, Finish:{finishTime.replace(microsecond=0)}, Running Time: {finishTime-startTime}')
 
 ### Queens Genetics 2000:
 ### Start: 2023-09-02 15:28:43, Finish:2023-09-02 15:46:24, Running Time: 0:17:41.784603

@@ -70,7 +70,7 @@ def queensPlotSolution( title, fitness ):
     plt.close('all')
     return
 
-def queensBruteForce( individualSize ):
+def queensBruteForce( individualSize, onlyfirst=False ):
     solution = []
     firstindividual = []
     print(f'Starting queensBruteForce({individualSize})')
@@ -80,17 +80,15 @@ def queensBruteForce( individualSize ):
     i=0
     print(f'initializing fitness..')
     fitness = np.zeros(math.factorial(individualSize),'i2')
-    startLapTime=datetime.now()
     print(f'starting permutations..')
     for individual in itertools.permutations(firstindividual,r=individualSize):
         fitness[i] = queensFitness(individual)
         if( fitness[i] == maxFitness ):
             solution += [individual]
-            finishLapTime=datetime.now()
-            print( f'Start Solution {len(solution)} Search at: {startLapTime.replace(microsecond=0)}, Find Solution {len(solution)} at:{finishLapTime.replace(microsecond=0)}, Running Time: {finishLapTime-startLapTime}')
-            startLapTime=datetime.now()
+            if onlyfirst:
+                break
         i += 1
-    if individualSize<10:
+    if not onlyfirst and individualSize<10:
         print(f'ploting solution... (len(fitness)={len(fitness)})')
         queensPlotSolution( f'img/{individualSize} Queens Problem', fitness )
     print(f'Stopping queensBruteForce({individualSize})')
@@ -281,6 +279,31 @@ def queensGenetic( individualSize, populationSize, weight_parameters, stop_gener
     print(f'statistics[2]={statistics[2]}')
     return population
 
+
+def main_bruteforce_onlyfirst():
+    solutions={}
+    elapsedtimetable = []
+    # solve from n=1 to n=14 by brute force (only first answer)
+    filename = 'solutions-nqueens-bruteforce-onlyfirst.json'
+    with open(filename,'w') as f:
+        f.write('\n')
+    for n in range(1,15):
+        startTime=datetime.now()
+        solutions[f'{n}_Queens'] = queensBruteForce(n,onlyfirst=True)
+        finishTime=datetime.now()
+        elapsedtimetable += [finishTime-startTime]
+        print( f'\n\nStart: {startTime.replace(microsecond=0)}, Finish:{finishTime.replace(microsecond=0)}, Running Time: {finishTime-startTime}, '
+              + f'{n} Queens Solutions ({len(solutions[f"{n}_Queens"])} best solutions)')
+        print(f'solutions[f\'{n}_Queens\'] = {solutions[f"{n}_Queens"]}')
+        # write solution to a file
+        with open(filename,'a') as f:
+            json.dump({f'{n}_Queens':solutions[f'{n}_Queens']},f)
+            f.write('\n')
+    print(f'\n\nQt Rainhas, Elapsed Time')
+    for i in range(len(elapsedtimetable)):
+        print(f'{i+1}, {elapsedtimetable[i]}')
+    print(f'\n\n')
+
 def main_bruteforce():
     solutions={}
     # solve from n=1 to n=12 by brute force
@@ -327,6 +350,7 @@ if __name__ == '__main__':
     # track execution time
     finishTime=datetime.now()
     print( f'\n\Genetics nStart: {startTime.replace(microsecond=0)}, Finish:{finishTime.replace(microsecond=0)}, Running Time: {finishTime-startTime}')
+    #"""
     """
     # track execution time
     startTime=datetime.now()
@@ -335,6 +359,15 @@ if __name__ == '__main__':
     # track execution time
     finishTime=datetime.now()
     print( f'\n\nBrute Force Start: {startTime.replace(microsecond=0)}, Finish:{finishTime.replace(microsecond=0)}, Running Time: {finishTime-startTime}')
-
+    #"""
+    #"""
+    # track execution time
+    startTime=datetime.now()
+    print(f'\n\nBrute Force Start: {startTime.replace(microsecond=0)}\n\n')
+    main_bruteforce_onlyfirst()
+    # track execution time
+    finishTime=datetime.now()
+    print( f'\n\nBrute Force Start: {startTime.replace(microsecond=0)}, Finish:{finishTime.replace(microsecond=0)}, Running Time: {finishTime-startTime}')
+    #"""
 ### Queens Genetics 2000:
 ### Start: 2023-09-02 15:28:43, Finish:2023-09-02 15:46:24, Running Time: 0:17:41.784603

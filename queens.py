@@ -342,7 +342,7 @@ def main_genetics():
             f.write('\n')
 
 if __name__ == '__main__':
-    """
+    #"""
     # track execution time
     startTime=datetime.now()
     print(f'Genetics Start: {startTime.replace(microsecond=0)}\n\n')
@@ -351,7 +351,7 @@ if __name__ == '__main__':
     finishTime=datetime.now()
     print( f'\n\Genetics nStart: {startTime.replace(microsecond=0)}, Finish:{finishTime.replace(microsecond=0)}, Running Time: {finishTime-startTime}')
     #"""
-    """
+    #"""
     # track execution time
     startTime=datetime.now()
     print(f'\n\nBrute Force Start: {startTime.replace(microsecond=0)}\n\n')
